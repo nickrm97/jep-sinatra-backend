@@ -1,8 +1,10 @@
 require 'sinatra'
 require 'sinatra/reloader'
-
-require 'json'
 require 'pry'
+
+require_relative 'environment'
+require 'json'
+
 
 before do
     response.headers["Access-Control-Allow-Methods"] = "POST", "OPTIONS", "PUT", "DELETE", "GET", "PATCH"
@@ -17,6 +19,7 @@ end
 
 def rating_questions
     JSON.parse(File.read('db.json'))['ratingQuestions']
+    # RatingQuestion.all.to_a.to_json
 end
 
 def replace_json(updated_questions_data)
@@ -25,8 +28,10 @@ def replace_json(updated_questions_data)
 end
 
 get '/ratingQuestions' do
+    # binding.pry
     content_type :json
     rating_questions.to_json
+    # RatingQuestion.all.to_json
 end
 
 get '/ratingQuestions/:id' do
@@ -76,10 +81,10 @@ delete '/ratingQuestions/:id' do
     new_questions = rating_questions.reject { |q| q["id"] == target_id }
 
     if new_questions
-    # Put the new array into JSON
-    replace_json(new_questions)
-    response.status = 200 
-    response.body = {}.to_json
+        # Put the new array into JSON
+        replace_json(new_questions)
+        response.status = 204 
+        # response.body = {}.to_json
     end
     return response
 end
@@ -128,7 +133,7 @@ patch '/ratingQuestions/:id' do
     json_params = JSON.parse(request.body.read) 
     question.merge!(json_params)
 
-    response.body = question.to_json
-    response.status =200
+    response.body = question
+    response.status = 200
     response
 end

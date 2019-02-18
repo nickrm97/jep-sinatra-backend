@@ -1,0 +1,7 @@
+development:
+  clients:
+    default: 
+      database: surveys_dev
+      hosts:
+        - localhost:27017
+      logger: true
