@@ -18,30 +18,35 @@ options "*" do
 end
 
 def rating_questions
-    JSON.parse(File.read('db.json'))['ratingQuestions']
-    # RatingQuestion.all.to_a.to_json
+    RatingQuestion.all.to_a
 end
 
-def replace_json(updated_questions_data)
-    new_json = { "ratingQuestions": updated_questions_data }
-    File.open("./db.json", "w"){ |f| f.write(new_json.to_json) }
-end
+
 
 get '/ratingQuestions' do
-    # binding.pry
-    content_type :json
     rating_questions.to_json
-    # RatingQuestion.all.to_json
 end
 
 get '/ratingQuestions/:id' do
-    target_id = params["id"].to_i
-    question = rating_questions.find{ |q| q["id"] == target_id }
+    target_id = params["id"]
+    question = RatingQuestion.find_by(id: target_id)
     return response.status = 404 if question.nil?
 
-    response.status = 200 
-    response.body = question.to_json
-    response
+    response.status = 202 
+    question.to_json
+end
+
+
+delete '/ratingQuestions/:id' do
+    target_id = params["id"]
+    # Find if the question exists
+    q_to_del = RatingQuestion.find_by(_id: target_id)
+    return response.status = 404 if q_to_del.nil?
+
+    # If it exists, kill it lol
+    response.status = 204
+    q_to_del.destroy
+    {}
 end
 
 post '/ratingQuestions' do
@@ -62,78 +67,8 @@ post '/ratingQuestions' do
         return response
     end
 
-    new_question = {"title" => json_params["title"], "id" => rating_questions.any? ? rating_questions.last["id"]+1 : 1}    
-    new_questions = rating_questions << new_question
+    # ISSUE: Not working, new_question returns an empty object...why
+    new_question = RatingQuestion.new(title: json_params["title"])
     status 201
-
-    # Now lets replace the file with this new array 
-    replace_json(new_questions)
     new_question.to_json
-end
-
-delete '/ratingQuestions/:id' do
-    target_id = params["id"].to_i
-    # Return a 404 if it's not in the array 
-
-    question = rating_questions.find{ |q| q["id"] == target_id }
-    return response.status = 404 if question.nil?
-
-    new_questions = rating_questions.reject { |q| q["id"] == target_id }
-
-    if new_questions
-        # Put the new array into JSON
-        replace_json(new_questions)
-        response.status = 204 
-        # response.body = {}.to_json
-    end
-    return response
-end
-
-put '/ratingQuestions/:id' do
-    # In case of empty body
-    if (request.body.nil?)
-        return response
-    end
-
-    target_id = params["id"].to_i
-    
-    updated_questions = rating_questions
-    question = updated_questions.find{ |q| q["id"] == target_id }
-   
-    if (question.nil? || target_id == 0)
-        response.status = 404
-        return response
-    end
-
-    json_params = JSON.parse(request.body.read) 
-
-    # If all is well and we have a question object, set that shit
-    question = {"id": target_id, "title": json_params["title"], tag: json_params["tag"]}.to_json
-    response.body = question
-    response.status = 200
-    response
-end
-
-patch '/ratingQuestions/:id' do 
-      # In case of empty body
-      if (request.body.nil?)
-        return response
-    end
-
-    target_id = params["id"].to_i
-    
-    updated_questions = rating_questions
-    question = updated_questions.find{ |q| q["id"] == target_id }
-   
-    if (question.nil? || target_id == 0)
-        response.status = 404
-        return response
-    end
-
-    json_params = JSON.parse(request.body.read) 
-    question.merge!(json_params)
-
-    response.body = question
-    response.status = 200
-    response
 end
