@@ -21,8 +21,6 @@ def rating_questions
     RatingQuestion.all.to_a
 end
 
-
-
 get '/ratingQuestions' do
     rating_questions.to_json
 end
@@ -51,24 +49,29 @@ end
 
 post '/ratingQuestions' do
     # If they don't actually send us a body
-    if request.body.size.zero?
-        response.status = 400 
-        response.body = {}.to_json
-        return response
-    end
-
-    json_params = JSON.parse(request.body.read) 
+    # if request.body.size.zero?
+    #     response.status = 400 
+    #     response.body = {}.to_json
+    #     return response
+    # end
 
     # If the title is empty, return an error 
-    if json_params["title"] == ''
+    if request.params["title"] == ''
         response.status = 422
-        # TODO: investigate cleaner way of sending errors 
         response.body = {"errors" => {"title" => ["cannot be blank"]}}.to_json
         return response
     end
 
-    # ISSUE: Not working, new_question returns an empty object...why
-    new_question = RatingQuestion.new(title: json_params["title"])
+    new_question = RatingQuestion.create(title: request.params["title"])
     status 201
     new_question.to_json
+end
+
+put '/ratingQuestions/:id' do
+    target_id = request.params["id"]
+    return response.status = 404 if RatingQuestion.find_by(id: target_id).nil? || request.params.size.zero?
+
+    # If it exists, lets edit it
+    response.status = 204
+    RatingQuestion.update(id: target_id, title: request.params["title"], upsert: true)
 end
