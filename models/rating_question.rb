@@ -3,4 +3,5 @@ class RatingQuestion
 
   field :title
   field :tag
+  validates :title, presence: true
 end

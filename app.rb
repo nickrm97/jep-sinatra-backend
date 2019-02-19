@@ -20,17 +20,31 @@ def rating_questions
     RatingQuestion.all.to_a
 end
 
+def send_response(response, status, body)
+    response.status = status
+    response.body = body.to_json
+    response
+end
+
+def serialize_question(question)
+    {
+      id: question.id.to_s,
+      title: question.title,
+      tag: question.tag
+    }
+end
+
 get '/ratingQuestions' do
-    rating_questions.to_json
+    new_questions = RatingQuestion.all.map{ |q| serialize_question(q) }
+    return send_response(response, 200, new_questions)
 end
 
 get '/ratingQuestions/:id' do
     target_id = params["id"]
-    question = RatingQuestion.find_by(id: target_id)
-    return response.status = 404 if question.nil?
+    question = RatingQuestion.find_by(_id: target_id)
+    return send_response(response, 404, {}) if question.nil?
 
-    response.status = 202 
-    question.to_json
+    return send_response(response, 200, serialize_question(question))
 end
 
 
@@ -38,31 +52,47 @@ delete '/ratingQuestions/:id' do
     target_id = params["id"]
     # Find if the question exists
     q_to_del = RatingQuestion.find_by(_id: target_id)
-    return response.status = 404 if q_to_del.nil?
+    return send_response(response, 404, {}) if q_to_del.nil?
 
     # If it exists, kill it lol
-    response.status = 204
     q_to_del.destroy
-    {}
+    return send_response(response, 204, {})
 end
 
 post '/ratingQuestions' do
-    if request.params["title"] == ''
-        response.status = 422
-        response.body = {"errors" => {"title" => ["cannot be blank"]}}.to_json
-        return response
-    end
+    json_params = JSON.parse(request.body.read) 
+    return send_response(response, 400, {}) if json_params.size.zero?
+    
+    new_question = RatingQuestion.new(title: json_params["title"], tag: json_params["tag"])
 
-    new_question = RatingQuestion.create(title: request.params["title"])
-    status 201
-    new_question.to_json
+    if new_question.save
+        send_response(response, 201, serialize_question(new_question))
+    else
+        errors = { "errors" => new_question.errors.messages }
+        return send_response(response, 422, errors )
+    end    
 end
 
 put '/ratingQuestions/:id' do
-    question = RatingQuestion.find_or_create_by(id: request.params["id"])
-    return response.status = 404 if request.params.size.zero?
+    # binding.pry
+    json_params = JSON.parse(request.body.read) 
+    question = RatingQuestion.find_by(id: params["id"])
+    return send_response(response, 404, {}) if json_params.nil? || question.nil?
 
     # If it exists, lets edit it
-    response.status = 202
-    question.update_attributes(title: request.params["title"])
+    question.update(title: json_params["title"], tag: json_params["tag"])
+    return send_response(response, 200, serialize_question(question))
+end
+
+patch '/ratingQuestions/:id' do
+    json_params = JSON.parse(request.body.read) 
+    question = RatingQuestion.find_by(id: params["id"])
+    return send_response(response, 404, {}) if json_params.nil? || question.nil?
+
+    # Don't replace unless we were given a title - I'm sure this could be written cleaner
+    title = json_params["title"].nil? ? question.title : json_params["title"]
+    tag = json_params["tag"].nil? ? question.tag : json_params["tag"]
+
+    question.update(title: title, tag: json_params["tag"])
+    return send_response(response, 200, serialize_question(question))
 end
