@@ -5,7 +5,6 @@ require 'pry'
 require_relative 'environment'
 require 'json'
 
-
 before do
     response.headers["Access-Control-Allow-Methods"] = "POST", "OPTIONS", "PUT", "DELETE", "GET", "PATCH"
     response.headers["Access-Control-Allow-Headers"] = "Authorization, Content-Type, Accept, X-User-Email, X-Auth-Token"
@@ -48,14 +47,6 @@ delete '/ratingQuestions/:id' do
 end
 
 post '/ratingQuestions' do
-    # If they don't actually send us a body
-    # if request.body.size.zero?
-    #     response.status = 400 
-    #     response.body = {}.to_json
-    #     return response
-    # end
-
-    # If the title is empty, return an error 
     if request.params["title"] == ''
         response.status = 422
         response.body = {"errors" => {"title" => ["cannot be blank"]}}.to_json
@@ -68,10 +59,10 @@ post '/ratingQuestions' do
 end
 
 put '/ratingQuestions/:id' do
-    target_id = request.params["id"]
-    return response.status = 404 if RatingQuestion.find_by(id: target_id).nil? || request.params.size.zero?
+    question = RatingQuestion.find_or_create_by(id: request.params["id"])
+    return response.status = 404 if request.params.size.zero?
 
     # If it exists, lets edit it
-    response.status = 204
-    RatingQuestion.update(id: target_id, title: request.params["title"], upsert: true)
+    response.status = 202
+    question.update_attributes(title: request.params["title"])
 end
