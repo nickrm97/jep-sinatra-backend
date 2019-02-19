@@ -51,7 +51,7 @@ end
 delete '/ratingQuestions/:id' do
     target_id = params["id"]
     # Find if the question exists
-    q_to_del = RatingQuestion.find_by(_id: target_id)
+    q_to_del = RatingQuestion.find(target_id)
     return send_response(response, 404, {}) if q_to_del.nil?
 
     # If it exists, kill it lol
@@ -60,11 +60,13 @@ delete '/ratingQuestions/:id' do
 end
 
 post '/ratingQuestions' do
-    json_params = JSON.parse(request.body.read) 
-    return send_response(response, 400, {}) if json_params.size.zero?
+    body = request.body.read 
+    return send_response(response, 400, nil) if body.size.zero?
+
+    json_params = JSON.parse(body) 
     
     new_question = RatingQuestion.new(title: json_params["title"], tag: json_params["tag"])
-
+    # binding.pry
     if new_question.save
         send_response(response, 201, serialize_question(new_question))
     else
