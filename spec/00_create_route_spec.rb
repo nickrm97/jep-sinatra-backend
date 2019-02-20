@@ -9,7 +9,6 @@ RSpec.describe "POST /ratingQuestions" do
     it "returns a 201 Created" do
       post("/ratingQuestions", { title: new_title, tag: new_tag }.to_json, { 'CONTENT_TYPE' => 'application/json'})
       expect(last_response.status).to eq(201)
-      # but wait there's more
     end
 
     it "returns the new document" do

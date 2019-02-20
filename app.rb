@@ -76,7 +76,6 @@ post '/ratingQuestions' do
 end
 
 put '/ratingQuestions/:id' do
-    # binding.pry
     json_params = JSON.parse(request.body.read) 
     question = RatingQuestion.find_by(id: params["id"])
     return send_response(response, 404, {}) if json_params.nil? || question.nil?
@@ -92,9 +91,11 @@ patch '/ratingQuestions/:id' do
     return send_response(response, 404, {}) if json_params.nil? || question.nil?
 
     # Don't replace unless we were given a title - I'm sure this could be written cleaner
-    title = json_params["title"].nil? ? question.title : json_params["title"]
-    tag = json_params["tag"].nil? ? question.tag : json_params["tag"]
+    title = json_params["title"]
+    tag = json_params["tag"]
 
-    question.update(title: title, tag: json_params["tag"])
-    return send_response(response, 200, serialize_question(question))
+    question.title = title if !title.nil?
+    question.tag = tag if !tag.nil?
+
+    return send_response(response, 200, serialize_question(question)) if question.save
 end

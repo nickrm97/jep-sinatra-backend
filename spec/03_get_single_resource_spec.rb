@@ -15,18 +15,14 @@ RSpec.describe "GET /ratingQuestions/:id" do
       post("/ratingQuestions", json, { "CONTENT_TYPE" => "application/json" })
       question = JSON.parse(last_response.body)
       get("/ratingQuestions/#{question["id"]}")
-      binding.pry
-      expect(last_response.body.is_a?(Hash)).to eq(true)
+      expect(question.is_a?(Hash)).to eq(true)
     end
   end
 
   context "asking to get a question that doesn't exist" do
-    let(:response) do
-      HTTP.get("#{SERVER}/ratingQuestions/i-will-never-exist")
-    end
-
     it "returns a 404 Not Found" do
-      expect(response.status).to eq(404)
+      get("/ratingQuestions/i-will-never-exist")
+      expect(last_response.status).to eq(404)
     end
   end
 end
