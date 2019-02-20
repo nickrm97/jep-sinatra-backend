@@ -72,7 +72,7 @@ end
 put '/ratingQuestions/:id' do
     json_params = JSON.parse(request.body.read) 
     question = RatingQuestion.find(params["id"])
-    return send_response(404, {}) if json_params.nil? || question.nil?
+    return send_response(404, {}) if question.nil?
 
     # If it exists, lets edit it
     question.update(title: json_params["title"], tag: json_params["tag"])
@@ -82,7 +82,7 @@ end
 patch '/ratingQuestions/:id' do
     json_params = JSON.parse(request.body.read) 
     question = RatingQuestion.find(params["id"])
-    return send_response(404, {}) if json_params.nil? || question.nil?
+    return send_response(404, {}) if question.nil?
 
     title = json_params["title"]
     tag = json_params["tag"]
