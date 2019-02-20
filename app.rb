@@ -40,16 +40,14 @@ get '/ratingQuestions' do
 end
 
 get '/ratingQuestions/:id' do
-    target_id = params["id"]
-    question = RatingQuestion.find_by(_id: target_id)
+    question = RatingQuestion.find(params["id"])
     return send_response(404, {}) if question.nil?
     return send_response(200, serialize_question(question))
 end
 
 
-delete '/ratingQuestions/:id' do
-    target_id = params["id"]
-    q_to_del = RatingQuestion.find(target_id)
+delete '/ratingQuestions/:id' do 
+    q_to_del = RatingQuestion.find(params["id"])
     return send_response(404, {}) if q_to_del.nil?
 
     q_to_del.destroy
@@ -73,7 +71,7 @@ end
 
 put '/ratingQuestions/:id' do
     json_params = JSON.parse(request.body.read) 
-    question = RatingQuestion.find_by(id: params["id"])
+    question = RatingQuestion.find(params["id"])
     return send_response(404, {}) if json_params.nil? || question.nil?
 
     # If it exists, lets edit it
@@ -83,7 +81,7 @@ end
 
 patch '/ratingQuestions/:id' do
     json_params = JSON.parse(request.body.read) 
-    question = RatingQuestion.find_by(id: params["id"])
+    question = RatingQuestion.find(params["id"])
     return send_response(404, {}) if json_params.nil? || question.nil?
 
     title = json_params["title"]
