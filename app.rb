@@ -43,30 +43,26 @@ get '/ratingQuestions/:id' do
     target_id = params["id"]
     question = RatingQuestion.find_by(_id: target_id)
     return send_response(response, 404, {}) if question.nil?
-
     return send_response(response, 200, serialize_question(question))
 end
 
 
 delete '/ratingQuestions/:id' do
     target_id = params["id"]
-    # Find if the question exists
     q_to_del = RatingQuestion.find(target_id)
     return send_response(response, 404, {}) if q_to_del.nil?
 
-    # If it exists, kill it lol
     q_to_del.destroy
     return send_response(response, 204, {})
 end
 
 post '/ratingQuestions' do
-    body = request.body.read 
+    body = request.body.read
     return send_response(response, 400, nil) if body.size.zero?
 
-    json_params = JSON.parse(body) 
-    
+    json_params = JSON.parse(body)
     new_question = RatingQuestion.new(title: json_params["title"], tag: json_params["tag"])
-    # binding.pry
+
     if new_question.save
         send_response(response, 201, serialize_question(new_question))
     else
@@ -90,12 +86,10 @@ patch '/ratingQuestions/:id' do
     question = RatingQuestion.find_by(id: params["id"])
     return send_response(response, 404, {}) if json_params.nil? || question.nil?
 
-    # Don't replace unless we were given a title - I'm sure this could be written cleaner
     title = json_params["title"]
     tag = json_params["tag"]
 
     question.title = title if !title.nil?
     question.tag = tag if !tag.nil?
-
     return send_response(response, 200, serialize_question(question)) if question.save
 end
